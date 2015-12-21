@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using FluentAutomation;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
+using OpenQA.Selenium.Support.UI;
 
 
 namespace AirPlaneBookHelper
@@ -20,12 +21,14 @@ namespace AirPlaneBookHelper
         protected int _placeFrom = 0;
         protected int _placeTo = 4;
         protected string _flightFile = "vanilla-air[*].png";
+        protected int _waitDelay = 1000;
 
         public static IWebDriver webDriver = null;
 
         public GrabHelp()
         {
             webDriver = new FirefoxDriver();
+            webDriver.Manage().Timeouts().ImplicitlyWait(new TimeSpan(0, 0, 0, 2));
         }
 
         public void SearchCriteria()
@@ -57,8 +60,15 @@ namespace AirPlaneBookHelper
             var searchBtn = webDriver.FindElement(By.Id("edit-submit-ticket"));
             searchBtn.Click();
 
-            Thread.Sleep(1000 * 5);
-            TakeScreenShot(_flightFile);
+            WebDriverWait driverWait = new WebDriverWait(webDriver, new TimeSpan(0, 0, 3));
+            
+            // wait till the filght check box created
+            driverWait.Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(By.XPath("//*[@class='vnl-flight-select flight1']//span[@class='vnl-radio-btn__add_class']")));
+            driverWait.Until(ExpectedConditions.PresenceOfAllElementsLocatedBy(By.XPath("//*[@class='vnl-flight-select flight2']//span[@class='vnl-radio-btn__add_class']")));
+
+
+            Thread.Sleep(_waitDelay);// sleep for wait the UI showed
+            TakeScreenShot(_flightFile);// take snap shot for the demo
             ReleaseWebDriver();
 
 
@@ -84,7 +94,7 @@ namespace AirPlaneBookHelper
             }
 
             var takeShot = ((ITakesScreenshot)webDriver).GetScreenshot();
-            fileName = fileName.Replace("*", DateTime.Now.ToString("yyyy-mm-dd HH_mm_ss"));
+            fileName = fileName.Replace("*", DateTime.Now.ToString("yyyy-MM-dd HH_mm_ss"));
             var filename = new StringBuilder(folderLocation);
             filename.Append(fileName);
             takeShot.SaveAsFile(filename.ToString(), ImageFormat.Png);
